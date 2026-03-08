@@ -26,6 +26,10 @@ dev = [
 [project.scripts]
 stretto = "main:app"
 
+[tool.setuptools]
+py-modules = ["main"]
+packages = ["core"]
+
 [tool.setuptools.dynamic]
 version = {file = "VERSION"}
 

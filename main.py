@@ -23,6 +23,7 @@ app = typer.Typer(
     help="Combine two audio files with crossfade looping, normalization, and web optimization.",
     add_completion=False,
     no_args_is_help=True,
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 
 
