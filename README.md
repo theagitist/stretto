@@ -21,6 +21,18 @@ pip install -e ".[dev]"
 
 ## Usage
 
+You can run Stretto in two ways:
+
+```bash
+# If installed via pip (available system-wide)
+stretto background.mp3 voiceover.mp3
+
+# Or directly from the project directory
+./stretto background.mp3 voiceover.mp3
+```
+
+### Examples
+
 ```bash
 # Basic usage — combine two audio files with default settings
 stretto background.mp3 voiceover.mp3
