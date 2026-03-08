@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+.env
+/tmp/stretto/
+*.egg
+.pytest_cache/
+docs/planning/
+test_*.mp3
