@@ -26,6 +26,7 @@ class AudioInfo:
     codec: str
     sample_rate: int
     channels: int
+    loudness_lufs: float = 0.0
 
     @property
     def duration_s(self) -> float:

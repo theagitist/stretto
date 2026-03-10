@@ -92,6 +92,8 @@ When primary audio is shorter than secondary + delay:
 | `--format` | `-f` | `mp3` | Output format |
 | `--loop-blend` | `-b` | `500ms` | Crossfade duration for loops |
 | `--optimize/--no-optimize` | `-p` | `true` | Optimize for web size |
+| `--bg-level` | `-g` | `-35` | Target loudness for background (LUFS) |
+| `--voice-level` | `-l` | `-16` | Target loudness for voiceover (LUFS) |
 | `--output` | `-x` | `[file1]_combined` | Output filename |
 | `--yes-to-all` | `-y` | — | Skip prompts (headless mode) |
 | `--dry-run` | `-n` | — | Show plan without processing |

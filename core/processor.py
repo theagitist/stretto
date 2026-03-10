@@ -79,6 +79,33 @@ def check_ffmpeg() -> str:
 # ── Audio probing ───────────────────────────────────────────────────────
 
 
+def _measure_loudness(filepath: str) -> float:
+    """Measure integrated loudness (LUFS) of an audio file using EBU R128.
+
+    Returns:
+        Integrated loudness in LUFS (e.g. -14.0).
+        Returns 0.0 if measurement fails.
+    """
+    try:
+        result = subprocess.run(
+            [
+                "ffmpeg", "-i", filepath,
+                "-af", "ebur128=framelog=verbose",
+                "-f", "null", "-",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        # ebur128 outputs summary to stderr; look for integrated loudness
+        match = re.search(r"I:\s+([-\d.]+)\s+LUFS", result.stderr)
+        if match:
+            return float(match.group(1))
+    except (subprocess.TimeoutExpired, OSError, ValueError):
+        pass
+    return 0.0
+
+
 def probe_audio(filepath: str) -> AudioInfo:
     """Probe an audio file and return its metadata.
 
@@ -105,12 +132,15 @@ def probe_audio(filepath: str) -> AudioInfo:
     stream = audio_streams[0]
     duration_s = float(info["format"].get("duration", 0))
 
+    loudness = _measure_loudness(str(path))
+
     return AudioInfo(
         path=str(path),
         duration_ms=round(duration_s * 1000),
         codec=stream.get("codec_name", "unknown"),
         sample_rate=int(stream.get("sample_rate", 44100)),
         channels=int(stream.get("channels", 2)),
+        loudness_lufs=loudness,
     )
 
 
@@ -157,6 +187,8 @@ def build_and_run(
     optimize: bool,
     needs_loop: bool,
     iterations: int,
+    bg_level_lufs: float,
+    voice_level_lufs: float,
     verbose: bool,
 ) -> None:
     """Build the FFmpeg filtergraph and execute it.
@@ -199,6 +231,20 @@ def build_and_run(
                 "adelay", delays=delay_val,
             )
 
+        # ── Step 2b: Balance volumes (background vs voiceover) ─────
+        # File1 is always background noise, file2 is always voiceover.
+        # Always ensure the background sits well below the voice.
+        bg_lufs = file1_info.loudness_lufs
+        vo_lufs = file2_info.loudness_lufs
+        target_bg_lufs = bg_level_lufs
+        target_vo_lufs = voice_level_lufs
+        if bg_lufs != 0.0:
+            bg_adj = target_bg_lufs - bg_lufs
+            primary_input = primary_input.filter("volume", volume=f"{bg_adj}dB")
+        if vo_lufs != 0.0:
+            vo_adj = target_vo_lufs - vo_lufs
+            secondary_input = secondary_input.filter("volume", volume=f"{vo_adj}dB")
+
         # ── Step 3: Mix ─────────────────────────────────────────────
         mixed = ffmpeg.filter(
             [primary_input, secondary_input],
@@ -213,10 +259,10 @@ def build_and_run(
 
         # ── Step 5: Loudness normalization ──────────────────────────
         mixed = mixed.filter(
-            "dynaudnorm",
-            framelen=500,
-            gausssize=31,
-            peak=0.95,
+            "loudnorm",
+            I=-16,
+            TP=-1.5,
+            LRA=11,
         )
 
         # ── Step 6: Fade-in / fade-out ──────────────────────────────

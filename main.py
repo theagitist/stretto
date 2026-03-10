@@ -96,6 +96,18 @@ def main(
         "-n",
         help="Show execution plan without processing.",
     ),
+    bg_level: str = typer.Option(
+        "-35",
+        "--bg-level",
+        "-g",
+        help="Target loudness for background audio in LUFS (e.g. -35, -30).",
+    ),
+    voice_level: str = typer.Option(
+        "-16",
+        "--voice-level",
+        "-l",
+        help="Target loudness for voiceover audio in LUFS (e.g. -16, -14).",
+    ),
     verbose: bool = typer.Option(
         False,
         "--verbose",
@@ -127,6 +139,14 @@ def main(
     except typer.BadParameter as exc:
         print_error(str(exc))
         raise typer.Exit(code=1) from exc
+
+    # ── Parse LUFS levels ──────────────────────────────────────
+    try:
+        bg_level_lufs = float(bg_level)
+        voice_level_lufs = float(voice_level)
+    except ValueError:
+        print_error("--bg-level and --voice-level must be numeric LUFS values (e.g. -35, -16).")
+        raise typer.Exit(code=1)
 
     # ── Validate output format ──────────────────────────────────────
     supported_formats = {"mp3", "wav", "ogg", "flac", "aac", "m4a", "opus", "wma"}
@@ -208,6 +228,8 @@ def main(
         optimize=optimize,
         needs_loop=needs_loop,
         iterations=iterations,
+        bg_level_lufs=bg_level_lufs,
+        voice_level_lufs=voice_level_lufs,
         verbose=verbose,
     )
 

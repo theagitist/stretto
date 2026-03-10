@@ -55,6 +55,9 @@ stretto bg.mp3 voice.mp3 --dry-run
 # Headless mode (no prompts, for automation)
 stretto bg.mp3 voice.mp3 -y
 
+# Adjust volume levels (background quieter, voice louder)
+stretto bg.mp3 voice.mp3 --bg-level -40 --voice-level -14
+
 # See the raw FFmpeg command
 stretto bg.mp3 voice.mp3 --verbose
 ```
@@ -77,6 +80,8 @@ Options:
   -p, --optimize / -P, --no-optimize
                                Optimize for web [default: optimize]
   -x, --output <PATH>          Output filename [default: <file1>_combined.<format>]
+  -g, --bg-level <LUFS>        Target loudness for background audio [default: -35]
+  -l, --voice-level <LUFS>     Target loudness for voiceover audio [default: -16]
   -y, --yes-to-all             Skip confirmation prompts
   -n, --dry-run                Show execution plan without processing
   -v, --verbose                Print raw FFmpeg commands
@@ -99,10 +104,11 @@ All time parameters (`--delay`, `--fade-in`, `--fade-out`, `--loop-blend`) accep
 1. **Probes** both audio files for duration, codec, and metadata.
 2. **Calculates** whether the primary audio needs looping to cover the secondary audio + delay.
 3. If looping is needed, **chains crossfade** filters to create smooth loop transitions (configurable blend duration).
-4. **Mixes** the primary and delayed secondary audio.
-5. Applies **dynamic normalization** (`dynaudnorm`) to prevent clipping.
-6. Applies optional **fade-in** and **fade-out**.
-7. **Encodes** the output (LAME VBR for optimized MP3, or high bitrate when not optimized).
+4. **Analyzes loudness** (EBU R128) and adjusts volume levels so the voiceover is clear above the background.
+5. **Mixes** the primary and delayed secondary audio.
+6. Applies **loudness normalization** (`loudnorm`) to prevent clipping.
+7. Applies optional **fade-in** and **fade-out**.
+8. **Encodes** the output (LAME VBR for optimized MP3, or high bitrate when not optimized).
 
 ## Running tests
 
