@@ -37,8 +37,11 @@ stretto/
 # Install dependencies
 pip install -e .
 
-# Run the CLI
+# Run the CLI (two-file mode)
 python main.py <FILE1> <FILE2> [OPTIONS]
+
+# Run the CLI (directory batch mode)
+python main.py <DIRECTORY> [OPTIONS]
 
 # Run all tests
 pytest
@@ -98,6 +101,7 @@ When primary audio is shorter than secondary + delay:
 | `--yes-to-all` | `-y` | — | Skip prompts (headless mode) |
 | `--dry-run` | `-n` | — | Show plan without processing |
 | `--verbose` | `-v` | — | Print raw FFmpeg command |
+| `--version` | `-V` | — | Show version and exit |
 
 All time parameters accept suffixes: `2s`, `1500ms`, `1500`, `1.5s`.
 

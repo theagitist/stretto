@@ -1,6 +1,8 @@
 # Stretto
 
-A CLI tool that combines two audio files into a single output. The primary audio plays first, the secondary audio starts after a configurable delay on top of it. If the primary audio is too short, it loops with smooth crossfade blending. The output is normalized to prevent clipping and optimized for web.
+A CLI tool that combines two audio files into a single output. The primary audio (background) plays first, the secondary audio (voiceover) starts after a configurable delay on top of it. If the primary audio is too short, it loops with smooth crossfade blending. The output is normalized to prevent clipping and optimized for web.
+
+Supports **batch processing** — pass a directory of numbered file pairs to combine them all at once.
 
 ## Requirements
 
@@ -23,13 +25,39 @@ pip install -e ".[dev]"
 
 You can run Stretto in two ways:
 
-```bash
-# If installed via pip (available system-wide)
-stretto background.mp3 voiceover.mp3
+### Two-file mode
 
-# Or directly from the project directory
-./stretto background.mp3 voiceover.mp3
+```bash
+stretto background.mp3 voiceover.mp3
 ```
+
+### Directory mode (batch)
+
+Place numbered file pairs in a directory using the naming pattern:
+
+```
+<NUMBER><sep><1|2><sep><rest>.ext
+```
+
+Where `<sep>` is a space, hyphen, or underscore. The number `1` marks the background audio, `2` marks the voiceover. Examples:
+
+```
+audio/
+├── 01 1 rain.mp3          # pair 1, background
+├── 01 2 intro.mp3         # pair 1, voiceover
+├── 02_1_wind.mp3          # pair 2, background
+├── 02_2_chapter-one.mp3   # pair 2, voiceover
+├── 003-1-ocean.mp3        # pair 3, background
+└── 003-2-outro.mp3        # pair 3, voiceover
+```
+
+Then run:
+
+```bash
+stretto audio/
+```
+
+All pairs are processed in order. Output files are saved into the same directory, auto-named from the background file (e.g. `audio/01 1 rain_combined.mp3`).
 
 ### Examples
 
@@ -58,6 +86,12 @@ stretto bg.mp3 voice.mp3 -y
 # Adjust volume levels (background quieter, voice louder)
 stretto bg.mp3 voice.mp3 --bg-level -40 --voice-level -14
 
+# Batch process a directory of numbered pairs
+stretto ./my-audio-pairs/
+
+# Batch process with custom settings
+stretto ./my-audio-pairs/ -d 3s --bg-level -40 -y
+
 # See the raw FFmpeg command
 stretto bg.mp3 voice.mp3 --verbose
 ```
@@ -65,11 +99,11 @@ stretto bg.mp3 voice.mp3 --verbose
 ## Options
 
 ```
-Usage: stretto [OPTIONS] <FILE1> <FILE2>
+Usage: stretto [OPTIONS] <FILE1|DIR> [FILE2]
 
 Arguments:
-  <FILE1>  Path to the primary audio file (loops if too short)
-  <FILE2>  Path to the secondary audio file (starts after delay)
+  <FILE1|DIR>  Path to primary audio file, or directory of numbered pairs
+  [FILE2]      Path to secondary audio file (omit in directory mode)
 
 Options:
   -i, --fade-in <MS>           Fade-in duration [default: 0]
@@ -85,6 +119,7 @@ Options:
   -y, --yes-to-all             Skip confirmation prompts
   -n, --dry-run                Show execution plan without processing
   -v, --verbose                Print raw FFmpeg commands
+  -V, --version                Show version and exit
   -h, --help                   Show this help message
 ```
 
